@@ -10,7 +10,7 @@ class ArtistController {
 
     SpotifyService spotifyService
     static responseFormats = ['json', 'xml']
-    def type = "artist"
+    String type = "artist"
 
     @Transactional
     def index(String name) {
@@ -27,13 +27,13 @@ class ArtistController {
         if (!artists) {
             def json = spotifyService.search(name, type)
 
-            json.artists.items.each { artistItem ->
+            artists = []
+            json.artists?.items?.each { artistItem ->
                 artists.add(new Artist(name: artistItem.name, idSpotify: artistItem.id))
             }
 
             Artist.saveAll(artists)
         }
-
 
         respond artists, [status: OK]
     }
@@ -49,7 +49,4 @@ class ArtistController {
 
         respond artist
     }
-
-
-
 }

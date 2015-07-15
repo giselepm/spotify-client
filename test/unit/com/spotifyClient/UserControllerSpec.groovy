@@ -1,11 +1,11 @@
 package com.spotifyClient
 
-
+import grails.converters.JSON
+import grails.test.mixin.Mock
+import grails.test.mixin.TestFor
+import spock.lang.Specification
 
 import static org.springframework.http.HttpStatus.*
-import grails.converters.JSON
-import grails.test.mixin.*
-import spock.lang.*
 
 @TestFor(UserController)
 @Mock(User)
@@ -17,84 +17,142 @@ class UserControllerSpec extends Specification {
     }
 
     void "Test the index action returns the correct model"() {
+        when:
+        controller.index()
 
-        when:"The index action is executed"
-            controller.index()
+        then:
+        response.status == OK.value
+        response.text == ([] as JSON).toString()
 
-        then:"The response is correct"
-            response.status == OK.value
-            response.text == ([] as JSON).toString()
+    }
+
+    void "Test the show action without an user"() {
+        when:
+        controller.show(null)
+
+        then:
+        response.status == NOT_FOUND.value
+        response.text == '{"error":"User not found","url":"http://minha.api/errors/user"}'
+
+    }
+
+    void "Test the show action returns the user received"() {
+        given:
+        def user = new User(login: "newlogin")
+
+        when:
+        controller.show(user)
+
+        then:
+        response.status == OK.value
+        response.text == (user as JSON).toString()
+
+    }
+
+    void "Test the save action without an user as parameter"() {
+        given:
+        controller.request.method = "POST"
+
+        when:
+        controller.save(null)
+
+        then:
+        response.status == NOT_FOUND.value
+        response.text == '{"error":"User not found","url":"http://minha.api/errors/user"}'
+    }
+
+    void "Test the save action with an invalid user as parameter"() {
+        given:
+        controller.request.method = "POST"
+        def user = new User()
+
+        when:
+        controller.save(user)
+
+        then:
+        response.status == PRECONDITION_FAILED.value
+        response.text == '{"error":"Validation failed","url":"http://minha.api/errors/user"}'
     }
 
     void "Test the save action correctly persists an instance"() {
+        given:
+        controller.request.method = "POST"
+        response.reset()
+        populateValidParams(params)
+        def user = new User(params)
 
-        when:"The save action is executed with an invalid instance"
-            // Make sure the domain class has at least one non-null property
-            // or this test will fail.
-            def user = new User(login: "login")
-            controller.save(user)
+        when:
+        controller.save(user)
 
-        then:"The response status is NOT_ACCEPTABLE"
-            response.status == PRECONDITION_FAILED.value
-
-        when:"The save action is executed with a valid instance"
-            response.reset()
-            populateValidParams(params)
-            user = new User(params)
-
-            controller.save(user)
-
-        then:"The response status is CREATED and the instance is returned"
-            response.status == CREATED.value
-            response.text == (user as JSON).toString()
+        then:
+        response.status == CREATED.value
+        response.text == (user as JSON).toString()
     }
 
-    void "Test the update action performs an update on a valid domain instance"() {
-        when:"Update is called for a domain instance that doesn't exist"
-            controller.update(null)
+    void "Test the update action without an user as parameter"() {
+        given:
+        controller.request.method = "PUT"
 
-        then:"The response status is NOT_FOUND"
-            response.status == NOT_FOUND.value
+        when:
+        controller.update(null)
 
-        when:"An invalid domain instance is passed to the update action"
-            response.reset()
-            def user = new User()
-            controller.update(user)
-
-        then:"The response status is NOT_ACCEPTABLE"
-            response.status == PRECONDITION_FAILED.value
-
-        when:"A valid domain instance is passed to the update action"
-            response.reset()
-            populateValidParams(params)
-            user = new User(params).save(flush: true)
-            controller.update(user)
-
-        then:"The response status is OK and the updated instance is returned"
-            response.status == OK.value
-            response.text == (user as JSON).toString()
+        then:
+        response.status == NOT_FOUND.value
+        response.text == '{"error":"User not found","url":"http://minha.api/errors/user"}'
     }
 
-    void "Test that the delete action deletes an instance if it exists"() {
-        when:"The delete action is called for a null instance"
-            controller.delete(null)
+    void "Test the update action with an invalid user as parameter"() {
+        given:
+        controller.request.method = "PUT"
+        def user = new User()
 
-        then:"A NOT_FOUND is returned"
-            response.status == NOT_FOUND.value
+        when:
+        controller.update(user)
 
-        when:"A domain instance is created"
-            response.reset()
-            populateValidParams(params)
-            def user = new User(params).save(flush: true)
+        then:
+        response.status == PRECONDITION_FAILED.value
+        response.text == '{"error":"Validation failed","url":"http://minha.api/errors/user"}'
+    }
 
-        then:"It exists"
-            User.count() == 1
+    void "Test the update action correctly updates an instance"() {
+        given:
+        controller.request.method = "PUT"
+        response.reset()
+        populateValidParams(params)
+        def user = new User(params).save(flush: true)
 
-        when:"The domain instance is passed to the delete action"
-            controller.delete(user)
+        when:
+        controller.update(user)
 
-        then:"The instance is deleted"
-            User.count() == 0
-            response.status == NO_CONTENT.value
+        then:
+        response.status == OK.value
+        response.text == (user as JSON).toString()
+    }
+
+    void "Test the delete action without an user as parameter"() {
+        given:
+        controller.request.method = "DELETE"
+
+        when:
+        controller.delete(null)
+
+        then:
+        response.status == NOT_FOUND.value
+        response.text == '{"error":"User not found","url":"http://minha.api/errors/user"}'
+    }
+
+    void "Test the delete action correctly deletes an instance"() {
+        given:
+        controller.request.method = "DELETE"
+        response.reset()
+        populateValidParams(params)
+        def user = new User(params).save(flush: true)
+
+        when:
+        controller.delete(user)
+
+        then:
+        User.count() == 0
+        response.status == NO_CONTENT.value
     }
 }

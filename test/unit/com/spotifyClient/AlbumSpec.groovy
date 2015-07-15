@@ -29,20 +29,6 @@ class AlbumSpec extends Specification {
 
     }
 
-//
-//    def "Name cannot be blank"() {
-//        given:
-//        def album = new Album(name: "")
-//
-//        when:
-//        album.save()
-//
-//        then:
-//        album.hasErrors()
-//        "blank" == album.errors["name"]
-//    }
-
-
     def "idSpotify cannot be null"() {
         given:
         def album = new Album()

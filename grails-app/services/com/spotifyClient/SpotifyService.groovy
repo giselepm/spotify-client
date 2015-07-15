@@ -16,7 +16,6 @@ class SpotifyService {
     def JSONObject search(String name, String type) {
         String url = "https://api.spotify.com/v1/search?q=${type}:%22${name.replace(' ', '%20')}%22&type=${type}"
 
-
         return connectSpotify(url)
 
     }

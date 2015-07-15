@@ -25,8 +25,8 @@ class PurchaseController {
         def user = User.findByLogin(purchase.user)
 
         if (!user) {
-            response.status = NOT_FOUND.value() //validated with the book
-            render ([error: "User not found", url: "http://minha.api/errors/user"] as JSON)
+            response.status = NOT_FOUND.value()
+            render ([error: "User not found", url: "http://minha.api/errors/purchase"] as JSON)
             return
         }
 
@@ -34,7 +34,7 @@ class PurchaseController {
 
         if (!song) {
             response.status = NOT_FOUND.value()
-            render ([error: "Song not found", url: "http://minha.api/errors/song"] as JSON)
+            render ([error: "Song not found", url: "http://minha.api/errors/purchase"] as JSON)
             return
         }
 
@@ -52,15 +52,15 @@ class PurchaseController {
             return
         }
 
-        def user = User.findByLogin(purchase.user)
+        User user = User.findByLogin(purchase.user)
 
         if (!user) {
-            response.status = NOT_FOUND.value() //validated with the book
+            response.status = NOT_FOUND.value()
             render ([error: "User not found", url: "http://minha.api/errors/purchase"] as JSON)
             return
         }
 
-        def song = Song.get(purchase.song)
+        Song song = Song.get(purchase.song)
 
         if (!song || !user.songs.contains(song)) {
             response.status = NOT_FOUND.value()
